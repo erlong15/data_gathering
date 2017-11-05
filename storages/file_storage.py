@@ -1,7 +1,7 @@
 import os
 
 from storages.storage import Storage
-
+import json
 
 class FileStorage(Storage):
 
@@ -12,9 +12,16 @@ class FileStorage(Storage):
         if not os.path.exists(self.file_name):
             raise StopIteration
 
-        with open(self.file_name) as f:
+        with open(self.file_name, encoding='utf-8') as f:
             for line in f:
                 yield line.strip()
+
+
+    def write_json(self, data_arr):
+        with open(self.file_name, 'w', encoding='utf-8') as f:
+            for data in data_arr:
+                f.write(json.dumps(data, ensure_ascii=False)+'\n')
+
 
     def write_data(self, data_array):
         """

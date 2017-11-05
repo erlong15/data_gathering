@@ -127,30 +127,39 @@ import sys
 
 from scrappers.scrapper import Scrapper
 from storages.file_storage import FileStorage
+import pandas as pd
+import argparse
+import json
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 SCRAPPED_FILE = 'scrapped_data.txt'
+SCRAPPED_JSON = 'scrapped_data.json'
 TABLE_FORMAT_FILE = 'data.csv'
 
 
-def gather_process():
+def gather_process(obj_count):
     logger.info("gather")
-    storage = FileStorage(SCRAPPED_FILE)
+    storage = FileStorage(SCRAPPED_JSON)
 
     # You can also pass a storage
-    scrapper = Scrapper()
+    scrapper = Scrapper(obj_count)
     scrapper.scrap_process(storage)
 
 
 def convert_data_to_table_format():
     logger.info("transform")
-
     # Your code here
     # transform gathered data from txt file to pandas DataFrame and save as csv
-    pass
+    storage = FileStorage(SCRAPPED_JSON)
+    objects = []
+    for row in storage.read_data():
+        objects.append(json.loads(row))
+
+    df = pd.DataFrame(objects)
+    df.to_csv(TABLE_FORMAT_FILE, encoding='utf-8')
 
 
 def stats_of_data():
@@ -160,6 +169,23 @@ def stats_of_data():
     # Load pandas DataFrame and print to stdout different statistics about the data.
     # Try to think about the data and use not only describe and info.
     # Ask yourself what would you like to know about this data (most frequent word, or something else)
+    df = pd.read_csv(TABLE_FORMAT_FILE, encoding='utf-8')
+    lg = df.groupby('language')
+    print(lg.describe().unstack())
+
+
+def get_args():
+    parser = argparse.ArgumentParser(description='data collector')
+    parser.add_argument('-c', '--count',
+                        help='How much courses do you want to scrape (default: 100)',
+                        required=False,
+                        type=int,
+                        default=100)
+    parser.add_argument('-a', '--action',
+                        help='required action (gather, transform, stats)',
+                        required=True)
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == '__main__':
@@ -168,14 +194,15 @@ if __name__ == '__main__':
     https://stackoverflow.com/questions/419163/what-does-if-name-main-do
     """
     logger.info("Work started")
+    args = get_args()
 
-    if sys.argv[1] == 'gather':
-        gather_process()
+    if args.action == 'gather':
+        gather_process(args.count)
 
-    elif sys.argv[1] == 'transform':
+    elif args.action == 'transform':
         convert_data_to_table_format()
 
-    elif sys.argv[1] == 'stats':
+    elif args.action == 'stats':
         stats_of_data()
 
     logger.info("work ended")
