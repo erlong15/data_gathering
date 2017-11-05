@@ -176,14 +176,13 @@ def stats_of_data():
 
 def get_args():
     parser = argparse.ArgumentParser(description='data collector')
+    parser.add_argument('action',
+                        help='required action (gather, transform, stats)')
     parser.add_argument('-c', '--count',
                         help='How much courses do you want to scrape (default: 100)',
                         required=False,
                         type=int,
                         default=100)
-    parser.add_argument('-a', '--action',
-                        help='required action (gather, transform, stats)',
-                        required=True)
     args = parser.parse_args()
     return args
 
